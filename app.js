@@ -1,0 +1,43 @@
+require("dotenv").config();
+const express = require("express");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const logger = require("morgan");
+const can = require("./middleware/permision");
+const indexRouter = require("./routes/index");
+const usersRouter = require("./routes/users");
+const courseRouter = require("./routes/course");
+const mediaRouter = require("./routes/media");
+const orderPaymentRouter = require("./routes/orderPayment");
+const lessonsRouter = require("./routes/Lessons");
+const chapterRouter = require("./routes/chapters");
+const reviewRouter = require("./routes/reviews");
+const mentorRouter = require("./routes/mentors");
+const imageCourseRouter = require("./routes/ImageCourse");
+
+const refreshToken = require("./routes/refreshToken");
+const webHook = require("./routes/webhook");
+const verifyToken = require("./middleware/verifyToken");
+const myCoursesRouter = require("./routes/myCourses");
+const app = express();
+
+app.use(logger("dev"));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: false, limit: "50mb" }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use("/", indexRouter);
+app.use("/users", usersRouter);
+app.use("/courses", courseRouter);
+app.use("/chapters", verifyToken, can("admin"), chapterRouter);
+app.use("/media", verifyToken, can("admin", "student"), mediaRouter);
+app.use("/orders", verifyToken, can("admin", "student"), orderPaymentRouter);
+app.use("/lessons", verifyToken, can("admin"), lessonsRouter);
+app.use("/refresh-token", refreshToken);
+app.use("/image-courses", verifyToken, imageCourseRouter);
+app.use("/my-courses", verifyToken, can("admin", "student"), myCoursesRouter);
+app.use("/mentors", verifyToken, can("admin"), mentorRouter);
+app.use("/reviews", verifyToken, can("admin", "student"), reviewRouter);
+app.use("/webhook", webHook);
+module.exports = app;
